@@ -34,7 +34,7 @@ if nargin < 2
   verb = false;
 end
 
-mexcmd = 'mex -outdir bin';
+mexcmd = 'mex -compatibleArrayDims -outdir bin';
 
 if verb
   mexcmd = [mexcmd ' -v'];
