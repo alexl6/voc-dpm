@@ -2,3 +2,11 @@
 learn
 svm_mex601
 .nfs*
+
+# macOS
+.DS_Store
+
+# Images
+.jpg
+.png
+.jpeg

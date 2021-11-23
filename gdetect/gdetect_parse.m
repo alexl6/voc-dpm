@@ -47,6 +47,11 @@ for level = 1:pyra.num_levels
 end
 
 [ign, ord] = sort(S, 'descend');
+% DEBUG
+% disp("thres:" + thresh);
+% disp("max:" + max(S));
+% disp("min:" + min(S));
+
 if ~isempty(ord)
   ord = ord(1:min(length(ord), max_num));
 end
