@@ -1,4 +1,4 @@
-This is a fork of the voc-release5
+This is a fork of voc-release5
 ===========
 Added 64-bit compatibility fix & various specific changes to support our specific usecase. Verified to work on MATLAB version R2020b and R2021a.
 
