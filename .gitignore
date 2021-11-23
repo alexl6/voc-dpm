@@ -7,6 +7,6 @@ svm_mex601
 .DS_Store
 
 # Images
-.jpg
-.png
-.jpeg
+*.jpg
+*.png
+*.jpeg
