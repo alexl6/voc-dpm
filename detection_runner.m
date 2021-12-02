@@ -108,6 +108,18 @@ if ~isempty(ds)
       bbox = clipboxes(im, bbox);
       top = nms(bbox, 13.5);
       clf;
+      
+      % Enforce  minimum size/ratio requirement to eliminate false detections
+      % At least 16000 pixels (80x200) and (height:width)>0.9
+      % TODO: Add the same code to detection_runner_text
+      w = bbox(top,3) - bbox(top,1);
+      h = bbox(top,4) - bbox(top,2);
+      
+      if w * h < 16000 | h / w > 0.9
+        out = [-1 -1 -1 -1];
+        return;
+      end
+
 %       disable image output
 %       showboxes(im, bbox(top,:), [join([folder,'/',fname])]);
       showboxes(im, bbox(top,:));

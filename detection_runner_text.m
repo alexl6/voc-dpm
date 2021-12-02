@@ -96,7 +96,18 @@ if ~isempty(ds)
       bbox = clipboxes(im, bbox);
       top = nms(bbox, 13.5);
       clf;
-
+      
+      % Experimental code: Enforce minimum detection size & ratio 
+      % requirements. At least 160000 pixels (80x200) and (height : width > 0.9)
+      disp(bbox(top,:));
+      w = bbox(top,3) - bbox(top,1);
+      h = bbox(top,4) - bbox(top,2);
+      
+      if w * h < 16000 | h / w > 0.9
+        out = [-1 -1 -1 -1];
+        return;
+      end
+      
       out = output_box(im, bbox(top,:));
     end
 % otherwise just export the image
