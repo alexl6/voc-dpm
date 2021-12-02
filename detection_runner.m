@@ -32,9 +32,9 @@ load('VOC2010/person_final');
 
 
 % Process all images in a folder
-files = dir('/Users/alex/Research/Data/images_2/*.jpg');
+files = dir('~/voc-dpm/Test images/images_0_rect/*.jpg');
 for k = 1:length(files)
-    detect(join(['/Users/alex/Research/Data/images_2/',files(k).name]), model, 1, files(k).name);
+    detect(join(['~/voc-dpm/Test images/images_0_rect/',files(k).name]), model, 1, files(k).name);
      disp("### "+ k + "/" + length(files) + "    " + files(k).name);
 end
 
@@ -72,7 +72,7 @@ axis on;
 
 % output file name
 fname = extractBefore(name,'.jpg');
-folder = '/Users/alex/Research/test_output/';
+folder = '~/voc-dpm/Test images/test_output/';
 if ~exist(folder, 'dir')
   mkdir(folder);
 end
@@ -110,14 +110,17 @@ if ~isempty(ds)
       clf;
 %       disable image output
 %       showboxes(im, bbox(top,:), [join([folder,'/',fname])]);
-      output_box(im, bbox(top,:));
+      showboxes(im, bbox(top,:));
+      pause;
+
+%       output_box(im, bbox(top,:));
     end
 % otherwise just export the image
 else
     clf;
 %     disable image output
 %     showboxes(im,[], [join([folder,'/',fname])]);
-    disp("no detection in " + fname);
+%     disp("no detection in " + fname);
 end
 
 

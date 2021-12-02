@@ -32,10 +32,10 @@ load('VOC2010/person_final');
 
 
 % Process all images in a folder
-files = dir('/Users/alex/Research/Data/images_2/*.jpg');
+files = dir('~/voc-dpm/Test images/images_0_rect/*.jpg');
 pause;
 for k = 1:length(files)
-    disp(detect(join(['/Users/alex/Research/Data/images_2/',files(k).name]), model, 1));
+    disp(detect(join(['~/voc-dpm/Test images/images_0_rect/',files(k).name]), model, 1));
 %     disp("### "+ k + "/" + length(files) + "    " + files(k).name);
 end
 

@@ -19,21 +19,21 @@ fprintf('compiling the code...');
 compile;
 fprintf('done.\n\n');
 
-% load('VOC2007/car_final');
-% model.vis = @() visualizemodel(model, ...
-%                   1:2:length(model.rules{model.start}));
-% test('000034.jpg', model, 1);
-% 
-% load('INRIA/inriaperson_final');
-% model.vis = @() visualizemodel(model, ...
-%                   1:2:length(model.rules{model.start}));
-% test('000061.jpg', model, 2);
+load('VOC2007/car_final');
+model.vis = @() visualizemodel(model, ...
+                  1:2:length(model.rules{model.start}));
+test('000034.jpg', model, 1);
 
-load('VOC2007/person_grammar_final');
-model.class = 'person grammar';
-model.vis = @() visualize_person_grammar_model(model, 6);
-% test('000061.jpg', model, 2);
-test('/Users/alex/Data/0000000130.jpg', model, 1);
+load('INRIA/inriaperson_final');
+model.vis = @() visualizemodel(model, ...
+                  1:2:length(model.rules{model.start}));
+test('000061.jpg', model, 2);
+
+% load('VOC2007/person_grammar_final');
+% model.class = 'person grammar';
+% model.vis = @() visualize_person_grammar_model(model, 6);
+% % test('000061.jpg', model, 2);
+% test('/Users/alex/Data/0000000130.jpg', model, 1);
 
 
 load('VOC2007/bicycle_final');
