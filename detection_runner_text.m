@@ -79,7 +79,7 @@ for i = 1: length(date_dirs)
                 images_list = dir(join([entry_dir, cam_dirs(k), '/*.jpg'], ''));
                 fileID = join([entry_dir, cam_dirs(k), '/bbox.txt'], '');
                 for l = 1:length(images_list)
-                    box = detect(join([entry_dir, cam_dirs(k), '/',images_list(l).name], ''), model, 1);
+                    box = detect(join([entry_dir, cam_dirs(k), '/',images_list(l).name], ''), model);
                     writematrix(box, fileID, 'WriteMode', 'append')
                 end
                 fclose('all');
@@ -94,7 +94,7 @@ end
 
 
 % detection runner
-function out = detect(imname, model, num_dets)
+function out = detect(imname, model)
 cls = model.class;
 
 im = imread(imname);
@@ -113,32 +113,46 @@ image(im);
 % draw bounding box if there are valid detections
 if ~isempty(ds)
     top = nms(ds, 0.5);
-    top = top(1:min(length(top), num_dets));
+    top = top(1:min(length(top), 5));
     ds = ds(top, :);
     bs = bs(top, :);
     clf;
-
-    if model.type == model_types.Grammar
-      bs = [ds(:,1:4) bs];
-      % moved this inside so this will only run for Grammar models
-    end
     
-
     if model.type == model_types.MixStar
       % get bounding boxes
       bbox = bboxpred_get(model.bboxpred, ds, reduceboxes(model, bs));
       bbox = clipboxes(im, bbox);
-      top = nms(bbox, 13.5);
+      top = nms(bbox, 0.3);
       clf;
       
-      out = output_box(im, bbox(top,:));
+      % size check
+      w = bbox(:,3) - bbox(:,1);
+      h = bbox(:,4) - bbox(:,2);
+      
+      % top2 holds the filtered list of top boxes
+      top2 = [];
+      
+      % check confidence level (threshold depends on box size)
+      for i = 1:length(top)
+          j = top(i);
+          if (bbox(j,5) < -0.35) || ((bbox(j,5) < 0.6) && (h(j) < 300) && (w(j) < 80))
+              disp(bbox(j,:));
+              continue;
+          end
+          top2 = [top2 j];
+      end
+        
+      % output images
+      showboxes(im, bbox(top2,:), join([folder,'/',fname], ''));
+      out = bbox(top2,:);
+
     end
 % otherwise just export the image
 else
     clf;
-
-    out = [-1 -1 -1 -1];
-%     disp("no detection in " + fname);
+    % output original image
+    showboxes(im,[], [join([folder,'/',fname])]);
+    out = [-1 -1 -1 -1 -1];
+    disp("no detection in " + fname);
 end
-
 
