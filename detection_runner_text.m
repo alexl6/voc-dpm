@@ -15,57 +15,91 @@ function detection_runner_text()
 
 startup;
 
-fprintf('compiling the code...');
-compile;
-fprintf('done.\n\n');
+% fprintf('compiling the code...');
+% compile;
+% fprintf('done.\n\n');
 
 % load model
 load('VOC2010/person_final');
-% model.vis = @() visualizemodel(model, ...
-%                   1:2:length(model.rules{model.start})); %#ok<NODEF>
-% load('VOC2010/person_grammar_final');
-% model.class = 'person grammar';
-% model.vis = @() visualize_person_grammar_model(model, 6);
+
 
 % Process a single image
 % detect('/home/alex/Pictures/0000000146.jpg', model, 1, '146.jpg');
 
 
 % Process all images in a folder
-files = dir('~/voc-dpm/Test images/images_0_rect/*.jpg');
-pause;
-for k = 1:length(files)
-    disp(detect(join(['~/voc-dpm/Test images/images_0_rect/',files(k).name]), model, 1));
-%     disp("### "+ k + "/" + length(files) + "    " + files(k).name);
-end
+% files = dir('/Users/alex/Research/Data/images_2/*.jpg');
+% fileID = '/Users/alex/Research/Data/images_2/exp.txt';
+% for k = 1:length(files)
+%     box = detect(join(['/Users/alex/Research/Data/images_2/',files(k).name]), model, 1);
+%     writematrix(box, fileID, 'WriteMode', 'append')
+% %     disp("### "+ k + "/" + length(files) + "    " + files(k).name);
+% end
+% fclose('all');
 
 
 % % Process data
-% files2 = dir('/home/alex/Pictures/*');
-% 
-% % pattern for folder names that contains image data
-% pattern = digitsPattern(4) + "_" + digitsPattern(2) + "_" + digitsPattern(2) + "_" + wildcardPattern;
-% match = matches({files2.name}, pattern);
-% 
-% img_folders_date = strings;
-% for k = 1:length(files2)
-%     if match(k)
-%         img_folders_date(end+1) = files2(k).name;
-%     end
-% end
-% 
-% disp(img_folders_date);
 
+
+% Base directory (RawData)
+base_dir = '/Users/alex/Research/Data/RawData/';
+cam_dirs = ["images_0", "images_1"];
+
+
+base_dir_list = dir(join([base_dir, '*']));
+
+% Match directories with name matching the YYYY_MM_DD date pattern
+date_pattern = digitsPattern(4) + "_" + digitsPattern(2) + "_" + digitsPattern(2);
+match_date = matches({base_dir_list.name}, date_pattern);
+date_dirs = strings;
+for i = 1:length(base_dir_list)
+    if match_date(i)
+        date_dirs(end+1) = base_dir_list(i).name;
+    end
+end
+date_dirs = date_dirs(2:end);
+
+% Process by date
+for i = 1: length(date_dirs)
+    % Build the full path for a give date directory
+    date_dir = join([base_dir, date_dirs(i),'/'], '');
+    date_dir_list = dir(join([date_dir,'*'], ''));
+    % Match directories with name matching 
+    % YYYY_MM_DD_{{specific description of the entry}}
+    entry_pattern = digitsPattern(4) + "_" + digitsPattern(2) + "_" + digitsPattern(2) + "_" + wildcardPattern;
+    match_entry = matches({date_dir_list.name}, entry_pattern);
+    for j = 1:length(date_dir_list)
+        if match_entry(j)
+            % Build the full for the directory of a specific data entry
+            entry_dir = join([date_dir, date_dir_list(j).name, '/'], '');
+            disp(entry_dir);
+            
+            for k = 1:length(cam_dirs)
+                disp(join(["Processing: ", entry_dir, cam_dirs(k)], ''));
+                images_list = dir(join([entry_dir, cam_dirs(k), '/*.jpg'], ''));
+                fileID = join([entry_dir, cam_dirs(k), '/bbox.txt'], '');
+                for l = 1:length(images_list)
+                    box = detect(join([entry_dir, cam_dirs(k), '/',images_list(l).name], ''), model);
+                    writematrix(box, fileID, 'WriteMode', 'append')
+                end
+                fclose('all');
+            end
+        end
+    end
+
+end
 
 
 
 
 
 % detection runner
-function out = detect(imname, model, num_dets)
+function out = detect(imname, model)
 cls = model.class;
 
 im = imread(imname);
+im = imresize(im, [480 NaN]);
+
 clf;
 image(im);
 
@@ -79,43 +113,46 @@ image(im);
 % draw bounding box if there are valid detections
 if ~isempty(ds)
     top = nms(ds, 0.5);
-    top = top(1:min(length(top), num_dets));
+    top = top(1:min(length(top), 5));
     ds = ds(top, :);
     bs = bs(top, :);
     clf;
-
-    if model.type == model_types.Grammar
-      bs = [ds(:,1:4) bs];
-      % moved this inside so this will only run for Grammar models
-    end
     
-
     if model.type == model_types.MixStar
       % get bounding boxes
       bbox = bboxpred_get(model.bboxpred, ds, reduceboxes(model, bs));
       bbox = clipboxes(im, bbox);
-      top = nms(bbox, 13.5);
+      top = nms(bbox, 0.3);
       clf;
       
-      % Experimental code: Enforce minimum detection size & ratio 
-      % requirements. At least 160000 pixels (80x200) and (height : width > 0.9)
-      disp(bbox(top,:));
-      w = bbox(top,3) - bbox(top,1);
-      h = bbox(top,4) - bbox(top,2);
+      % size check
+      w = bbox(:,3) - bbox(:,1);
+      h = bbox(:,4) - bbox(:,2);
       
-      if w * h < 16000 | h / w > 0.9
-        out = [-1 -1 -1 -1];
-        return;
+      % top2 holds the filtered list of top boxes
+      top2 = [];
+      
+      % check confidence level (threshold depends on box size)
+      for i = 1:length(top)
+          j = top(i);
+          if (bbox(j,5) < -0.35) || ((bbox(j,5) < 0.6) && (h(j) < 300) && (w(j) < 80))
+              disp(bbox(j,:));
+              continue;
+          end
+          top2 = [top2 j];
       end
-      
-      out = output_box(im, bbox(top,:));
+        
+      % output images
+      showboxes(im, bbox(top2,:), join([folder,'/',fname], ''));
+      out = bbox(top2,:);
+
     end
 % otherwise just export the image
 else
     clf;
-
-    out = [-1 -1 -1 -1];
-%     disp("no detection in " + fname);
+    % output original image
+    showboxes(im,[], [join([folder,'/',fname])]);
+    out = [-1 -1 -1 -1 -1];
+    disp("no detection in " + fname);
 end
-
 
